@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automatizacion VIN</title>
+    <style>
+        /* Styles remain the same as your provided second page */
+        body { /*...*/ }
+        form { /*...*/ }
+        label, button { /*...*/ }
+        input { /*...*/ }
+        button { /*...*/ }
+        h1 { /*...*/ }
+    </style>
+    <script>
+        // Redirect to login if not authenticated
+        window.onload = function () {
+            const idToken = sessionStorage.getItem('idToken');
+            if (!idToken) {
+                alert('You are not authenticated! Redirecting to login.');
+                window.location.href = 'index.html';
+            }
+        };
+
+        let callAPI = (codigovin, accion) => {
+            const idToken = sessionStorage.getItem('idToken');
+            if (!idToken) {
+                alert('Authentication token missing. Redirecting to login.');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            let myHeaders = new Headers();
+            myHeaders.append("Content-Type", "application/json");
+            myHeaders.append("Authorization", idToken);
+
+            let raw = JSON.stringify({ "codigo_vin": codigovin, "accion": accion });
+
+            let requestOptions = {
+                method: 'POST',
+                headers: myHeaders,
+                body: raw,
+                redirect: 'follow'
+            };
+
+            fetch("https://kkxyq6caqc.execute-api.us-east-1.amazonaws.com/vin-stage-1", requestOptions)
+                .then(response => response.text())
+                .then(result => alert(JSON.parse(result).message))
+                .catch(error => console.log('error', error));
+        };
+    </script>
+</head>
+<body>
+    <form>
+        <h1>Automatizacion VIN</h1>
+        <label>Codigo VIN:</label>
+        <input type="text" id="codigovin">
+        <label>Accion:</label>
+        <input type="text" id="accion">
+        <button type="button" onclick="callAPI(document.getElementById('codigovin').value, document.getElementById('accion').value)">Submit</button>
+    </form>
+</body>
+</html>

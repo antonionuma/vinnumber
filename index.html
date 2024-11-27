@@ -1,91 +1,104 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
-   <head>
-      <meta charset="UTF-8">
-      <title>Automatizacion VIN</title>
-      <style>
-         body {
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Automatizacion VIN</title>
+    <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js/dist/amazon-cognito-identity.min.js"></script>
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1240.0.min.js"></script>
+    <style>
+        body {
             background-color: #202b3c;
-            display: flex; /* Centering the form */
-            justify-content: center; /* Centering the form */
-            align-items: center; /* Centering the form */
-            height: 100vh; /* Centering the form */
-            margin: 0; /* Removing default margin */
-         }
-         form {
             display: flex;
-            flex-direction: column; /* Aligning form elements vertically */
-            align-items: center; /* Centering form elements horizontally */
-            background-color: #fff; /* Adding a white background to the form */
-            padding: 20px; /* Adding padding to the form */
-            border-radius: 8px; /* Adding border radius to the form */
-         }
-         label, button {
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        label, button {
             color: #FF9900;
             font-family: Arial, Helvetica, sans-serif;
             font-size: 20px;
-            margin: 10px 0; /* Adding margin between elements */
-         }
-         input {
+            margin: 10px 0;
+        }
+        input {
             color: #232F3E;
             font-family: Arial, Helvetica, sans-serif;
             font-size: 20px;
-            margin: 10px 0; /* Adding margin between elements */
-            width: 250px; /* Setting input width */
-            padding: 5px; /* Adding padding to input */
-         }
-         button {
-            background-color: #FF9900; /* Adding background color to button */
-            color: #fff; /* Changing button text color */
-            border: none; /* Removing button border */
-            padding: 10px 20px; /* Adding padding to button */
-            cursor: pointer; /* Changing cursor to pointer on hover */
-         }
-         h1{
+            margin: 10px 0;
+            width: 250px;
+            padding: 5px;
+        }
+        button {
+            background-color: #FF9900;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+        h1 {
             color: #202b3c;
             font-family: Arial, Helvetica, sans-serif;
-         }
-      </style>
-      <script>
-         // Define the function to call the API with the provided first name, last name, and phone number
-         let callAPI = (codigovin, accion)=>{
-            // Create a new Headers object and set the 'Content-Type' to 'application/json'
-             let myHeaders = new Headers();
-             myHeaders.append("Content-Type", "application/json");
-            
-            // Create the JSON string from the input values
-             //let raw = JSON.stringify({"firstname": fname, "lastname": lname, "phone_number": pnumber});
-             let raw = JSON.stringify({"codigo_vin": codigovin, "accion": accion});
-            
-            // Define the request options including method, headers, body, and redirect behavior
-             let requestOptions = {
-                 method: 'POST', // Method type
-                 headers: myHeaders, // Headers for the request
-                 body: raw, // The body of the request containing the JSON string
-                 redirect: 'follow' // Automatically follow redirects
-             };
-            
-            // Use the fetch API to send the request to the specified URL
-             fetch("https://kkxyq6caqc.execute-api.us-east-1.amazonaws.com/vin-stage-1", requestOptions) // Replace "API_KEY" with your actual API endpoint
-             .then(response => response.text()) // Parse the response as text
-             .then(result => alert(JSON.parse(result).message)) // Parse the result as JSON and alert the message
-             .catch(error => console.log('error', error)); // Log any errors to the console
-         }
-      </script>
-   </head>
-   <body>
-      <form>
-         <h1>Automatizacion VIN</h1>
-         <label>Codigo VIN :</label>
-         <input type="text" id="codigovin">
-         <label>Accion :</label>
-         <input type="text" id="accion">
-         <!-- <label>Phone Number :</label>
-         <input type="text" id="pNumber"> -->
-         <!--<button type="button" onclick="callAPI(document.getElementById('fName').value, document.getElementById('lName').value, document.getElementById('pNumber').value)">Submit</button> -->
-         <button type="button" onclick="callAPI(document.getElementById('codigovin').value, document.getElementById('accion').value)">Submit</button>
-         <!-- Button to submit user input without reloading the page -->
-         <!-- When clicked, it calls the callAPI function with values from the input fields -->
-      </form>
-   </body>
+        }
+    </style>
+</head>
+<body>
+    <form id="loginForm">
+        <h1>Login</h1>
+        <label>Username:</label>
+        <input type="text" id="username" required>
+        <label>Password:</label>
+        <input type="password" id="password" required>
+        <button type="button" onclick="login()">Login</button>
+    </form>
+
+    <script>
+        const poolData = {
+            UserPoolId: 'us-east-1_4uIFAbk0e', // Replace with your User Pool ID
+            ClientId: '5794sc3q9a3eq8k2h0p5tifeqf'  // Replace with your App Client ID
+        };
+        const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            const authData = {
+                Username: username,
+                Password: password,
+            };
+            const authDetails = new AmazonCognitoIdentity.AuthenticationDetails(authData);
+
+            const userData = {
+                Username: username,
+                Pool: userPool,
+            };
+            const cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+
+            cognitoUser.authenticateUser(authDetails, {
+                onSuccess: function (result) {
+                    const idToken = result.getIdToken().getJwtToken();
+                    console.log('ID Token:', idToken);
+
+                    // Save the token in localStorage or sessionStorage
+                    sessionStorage.setItem('idToken', idToken);
+
+                    // Redirect to the second page
+                    window.location.href = 'secondPage.html';
+                },
+                onFailure: function (err) {
+                    alert('Authentication failed: ' + err.message || JSON.stringify(err));
+                },
+            });
+        }
+    </script>
+</body>
 </html>
